@@ -2,10 +2,29 @@
 #include "config.h"
 
 void readsensors(){
-  sinyal[0] = analogRead(pthighAx); //rawthighAx
-  sinyal[1] = analogRead(pthighAz); //rawthighAz 
-  sinyal[2] = analogRead(pthighGy); //rawthighGy
+  sinyal[0] = analogRead(PinLeftGy);
+  sinyal[1] = analogRead(PinLeftAx); 
+  sinyal[2] = analogRead(PinLeftAz);  
+   
+  sinyal[3] = analogRead(PinRightGy); 
+  sinyal[4] = analogRead(PinRightAx); 
+  sinyal[5] = analogRead(PinRightAz); 
+
   lpfsensors();
+}
+
+void lpfsensors(){
+  for(int i=0; i<6; i++){
+    Ylpf[i] = (a1 * Ylpf_1[i] - a2 * Ylpf_2[i] + b0 * sinyal[i] + 
+              b1 * sinyal_1[i] + b2 * sinyal_2[i]);
+  if (Ylpf[i] < 0) Ylpf[i] =0;
+  if (Ylpf[i] >4096) Ylpf[i] =4096;
+
+  Ylpf_2[i] = Ylpf_1[i];
+  Ylpf_1[i] = Ylpf[i];
+  sinyal_2[i] = sinyal_1[i];
+  sinyal_1[i] = sinyal[i];
+  }
 }
 
 void printraw(){
@@ -16,32 +35,85 @@ void printraw(){
   Serial.print(sinyal[2]);
 }
 
+void sensorRate(){
+  GyL_rate = cal_sensorconvert(Ylpf[0], GyLoffset, Gysens);
+  AcxL_rate = cal_sensorconvert(Ylpf[1], Accoffset, Accsens);
+  AczL_rate = cal_sensorconvert(Ylpf[2], Accoffset, Accsens);
+  GyR_rate = cal_sensorconvert(Ylpf[3], GyRoffset, Gysens);
+  AcxR_rate = cal_sensorconvert(Ylpf[4], Accoffset, Accsens);
+  AczR_rate = cal_sensorconvert(Ylpf[5], Accoffset, Accsens);
+}
+
 float cal_sensorconvert(float rawADC, float ADCoffset, float ADCsens){
   float sensorRate = (rawADC-ADCoffset)/ADCsens;
   return sensorRate;
 }
 
+void sensorCalc(){
+  Tilt_angleL = (atan2f(AcxL_rate, AczL_rate) * Rad2Deg)-90;
+  Tilt_angleR = (atan2f(AcxR_rate, AczR_rate) * Rad2Deg)-90;
+  
+  // SUDUT DARI INTEGRASI W
+  //GyL_angle = GyL_angle + GyL_rate * dt; 
+  //GyR_angle = GyR_angle + GyR_rate * dt;
+}
+
 void Gy_caliberation(){
-  long sumGy = 0.0;
+  long sumGyL = 0.0, sumGyR = 0.0;
   for (int i = 0; i < 500; i++){
-    sumGy += analogRead(pthighGy);
+    sumGyL += analogRead(PinLeftGy);
+    sumGyR += analogRead(PinRightGy);
     delay(2);
   }
-   Gyoffset = sumGy / 500.0;
+  GyLoffset = sumGyL / 500.0;
+  GyRoffset = sumGyR / 500.0;
 
 }
 
-void lpfsensors(){
-  for(int i=0; i<3; i++){
-    Ylpf[i] = (a1 * Ylpf_1[i] - a2 * Ylpf_2[i] + b0 * sinyal[i] + 
-              b1 * sinyal_1[i] + b2 * sinyal_2[i]);
-  if (Ylpf[i] < 0) Ylpf[i] =0;
-  if (Ylpf[i] >4096) Ylpf[i] =4096;
+void kalmanfilter(){
+  // Menggunakan kecepatan sudut dari Gyro Y
+  TiltKalL += (GyL_rate - BiasL) * dt;
+  TiltKalR += (GyR_rate - BiasR) * dt;
+  
+  // Update matriks error covariance (P)
+  P1L += (QangleL + P4L * dt - P3L - P2L) * dt;
+  P2L -= P4L * dt;
+  P3L -= P4L * dt;
+  P4L += QgyroL * dt;
 
-  Ylpf_2[i] = Ylpf_1[i];
-  Ylpf_1[i] = Ylpf[i];
-  sinyal_2[i] = sinyal_1[i];
-  sinyal_1[i] = sinyal[i];
+  P1R += (QangleR + P4R * dt - P3R - P2R) * dt;
+  P2R -= P4R * dt;
+  P3R -= P4R * dt;
+  P4R += QgyroR * dt;
 
-  }
+  // Step 2: Pembaruan (Update)
+  // Hitung Kalman Gain (K)
+  ErrEstmtL = P1L + RangleL;
+  K0L = P1L / ErrEstmtL;
+  K1L = P3L / ErrEstmtL;
+
+  ErrEstmtR = P1R + RangleR;
+  K0R = P1R / ErrEstmtR;
+  K1R = P3R / ErrEstmtR;
+  
+  // Hitung selisih antara sudut akselerometer (X dan Z) dan estimasi Kalman
+  ErrTiltL = Tilt_angleL - TiltKalL;
+  ErrTiltR = Tilt_angleR - TiltKalR;
+
+  // Koreksi estimasi sudut dan bias giroskop
+  TiltKalL += K0L * ErrTiltL;
+  TiltKalR += K0R * ErrTiltR;
+  BiasL += K1L * ErrTiltL;
+  BiasR += K1R * ErrTiltR;
+
+  // Update matriks error covariance (P)
+  P1L -= K0L * P1L;
+  P2L -= K0L * P2L;
+  P3L -= K1L * P1L;
+  P4L -= K1L * P2L;
+
+  P1R -= K0R * P1R;
+  P2R -= K0R * P2R;
+  P3R -= K1R * P1R;
+  P4R -= K1R * P2R;
 }

@@ -2,27 +2,46 @@
 #define CONFIG_H
 #include <Arduino.h>
 
-const int pthighAx = PA6; 
-const int pthighAz = PA5;
-const int pthighGy = PA7;
-const float Rad2Deg = 57.2957795;
+// PINOUT
+const int PinLeftGy = PB1, PinLeftAx = PB0, PinLeftAz = PA7; //VCC = PB2, GND = PA6
+const int PinRightGy = PA4, PinRightAx = PA3, PinRightAz = PA2; //VCC = PA5, GND = PA1
 
-// Filter Coefficients
+
+// MATH CALC
+const float Rad2Deg = 57.2957795;
+extern float dt;
+
+
+// LPF COEFF
 const float a1 = 1.64746;
 const float a2 = 0.70090;    
 const float b0 = 0.01336;   
 const float b1 = 0.02672;    
 const float b2 = 0.01336;
-extern float Ylpf[3], Ylpf_1[3],Ylpf_2[3];
-extern float sinyal[3], sinyal_1[3], sinyal_2[3];
-// sinyal[0] = Ax, sinyal[1] = Az, sinyal[2] = Gy
 
-extern float Accoffset, Accsens, Gysens;
-//extern float rawthighAx, rawthighAz, rawthighGy;
-extern float Gy_rate, Acz_rate, Acx_rate; 
-extern float Gy_angle;
-extern float dt;
-extern long sumGy; extern float Gyoffset;
-extern float Tilt_angle, alpha, Angle;
+
+// SIGNAL PROCESSING
+extern float Ylpf[6], Ylpf_1[6],Ylpf_2[6];
+extern float sinyal[6], sinyal_1[6], sinyal_2[6]; // sinyal[0-6] =  GyL, AxL, AzL, GyR, AxR, AzR 
+extern float Accoffset, Accsens, GyLoffset, GyRoffset, Gysens;
+extern float GyL_rate, AczL_rate, AcxL_rate; // GyL_angle; digunakan untuk integrasi sudut
+extern float GyR_rate, AczR_rate, AcxR_rate; // GyR_angle; digunakan untuk integrasi sudut
+extern long sumGyL, sumGyR; 
+extern float Tilt_angleL, Tilt_angleR;
+
+
+//  KALMAN FILTER
+extern float TiltKalL, TiltKalR; 
+extern float BiasL, BiasR;
+
+// ERROR COVARIANCE MATRIX (P)
+extern float P1L, P2L, P3L, P4L;
+extern float P1R, P2R, P3R, P4R;
+
+// TUNING PARAMETER
+extern float QangleL, QgyroL, RangleL;    
+extern float QangleR, QgyroR, RangleR;    
+extern float ErrEstmtL, K0L, K1L, ErrTiltL;
+extern float ErrEstmtR, K0R, K1R, ErrTiltR;
 
 #endif CONFIG_H
