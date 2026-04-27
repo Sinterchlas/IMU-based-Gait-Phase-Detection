@@ -7,6 +7,5 @@ void readsensors();
 void printraw();
 float cal_sensorconvert(float rawADC, float ADCoffset, float ADCsens);
 void Gy_caliberation();
-void kalmanfilter();
 
 #endif FUNCTIONS_H

@@ -23,20 +23,6 @@ extern float Gy_rate, Acz_rate, Acx_rate;
 extern float Gy_angle;
 extern float dt;
 extern long sumGy; extern float Gyoffset;
-extern float Tilt_angle;
-
-//  Variabel Kalman Filter
-extern float TiltKal; 
-extern float Bias;
-
-// Matriks error covariance (P)
-extern float P1, P2, P3, P4;
-
-// Parameter tuning Kalman Filter
-// Anda bisa mengubah nilai Q dan R ini untuk menyesuaikan sensitivitas
-extern float Qangle; extern float Qgyro;    
-extern float Rangle;    
-
-extern float ErrEstmt, K0, K1, ErrTilt;
+extern float Tilt_angle, alpha, Angle;
 
 #endif CONFIG_H

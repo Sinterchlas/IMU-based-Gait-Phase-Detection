@@ -45,33 +45,3 @@ void lpfsensors(){
 
   }
 }
-
-void kalmanfilter(){
-  // Menggunakan kecepatan sudut dari Gyro Y
-  TiltKal += (Gy_rate - Bias) * dt;
-  
-  // Update matriks error covariance (P)
-  P1 += (Qangle + P4 * dt - P3 - P2) * dt;
-  P2 -= P4 * dt;
-  P3 -= P4 * dt;
-  P4 += Qgyro * dt;
-
-  // Step 2: Pembaruan (Update)
-  // Hitung Kalman Gain (K)
-  ErrEstmt = P1 + Rangle;
-  K0 = P1 / ErrEstmt;
-  K1 = P3 / ErrEstmt;
-  
-  // Hitung selisih antara sudut akselerometer (X dan Z) dan estimasi Kalman
-  ErrTilt = Tilt_angle - TiltKal;
-
-  // Koreksi estimasi sudut dan bias giroskop
-  TiltKal += K0 * ErrTilt;
-  Bias += K1 * ErrTilt;
-
-  // Update matriks error covariance (P)
-  P1 -= K0 * P1;
-  P2 -= K0 * P2;
-  P3 -= K1 * P1;
-  P4 -= K1 * P2;
-}
