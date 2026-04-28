@@ -50,12 +50,12 @@ float cal_sensorconvert(float rawADC, float ADCoffset, float ADCsens){
 }
 
 void sensorCalc(){
-  Tilt_angleL = (atan2f(AcxL_rate, AczL_rate) * Rad2Deg)-90;
-  Tilt_angleR = (atan2f(AcxR_rate, AczR_rate) * Rad2Deg)-90;
+  Tilt_angleL = -((atan2f(AcxL_rate, AczL_rate) * Rad2Deg)-90);
+  Tilt_angleR = -((atan2f(AcxR_rate, AczR_rate) * Rad2Deg)-90);
   
   // SUDUT DARI INTEGRASI W
-  //GyL_angle = GyL_angle + GyL_rate * dt; 
-  //GyR_angle = GyR_angle + GyR_rate * dt;
+ // GyL_angle = GyL_angle + GyL_rate * dt; 
+ // GyR_angle = GyR_angle + GyR_rate * dt;
 }
 
 void Gy_caliberation(){
@@ -72,8 +72,10 @@ void Gy_caliberation(){
 
 void kalmanfilter(){
   // Menggunakan kecepatan sudut dari Gyro Y
-  TiltKalL += (GyL_rate - BiasL) * dt;
-  TiltKalR += (GyR_rate - BiasR) * dt;
+  GyL_stable = GyL_rate - BiasL;
+  GyR_stable = GyR_rate - BiasR;
+  TiltKalL += GyL_stable * dt;
+  TiltKalR += GyR_stable * dt;
   
   // Update matriks error covariance (P)
   P1L += (QangleL + P4L * dt - P3L - P2L) * dt;
@@ -116,4 +118,57 @@ void kalmanfilter(){
   P2R -= K0R * P2R;
   P3R -= K1R * P1R;
   P4R -= K1R * P2R;
+}
+
+void peakdetection(){
+  buffGyL[0] = buffGyL[1];
+  buffGyL[1] = buffGyL[2];
+  buffGyL[2] = GyL_stable;
+  buffGyR[0] = buffGyR[1];
+  buffGyR[1] = buffGyR[2];
+  buffGyR[2] = GyR_stable;
+
+  buffAngleL[0] = buffAngleL[1];
+  buffAngleL[1] = buffAngleL[2];
+  buffAngleL[2] = -TiltKalL;
+  buffAngleR[0] = buffAngleR[1];
+  buffAngleR[1] = buffAngleR[2];
+  buffAngleR[2] = -TiltKalR;
+
+  // RIGHT IC DETECTION (MIN ANGLE)
+  if (buffAngleR[1]<buffAngleR[0] && buffAngleR[1]<buffAngleR[2]){
+    if (buffAngleR[1]<thresIC){
+      if(gaitState == 6){
+        gaitState = 1;}}}
+
+  // LEFT EC DETECTION (MIN W)
+  if (buffGyL[1]<buffGyL[0] && buffGyL[1]<buffGyL[2]){
+    if (buffGyL[1]<thresEC){
+      if(gaitState == 1){
+        gaitState = 2;}}}
+
+    // LEFT MS DETECTION (MAX W)
+  if (buffGyL[1]>buffGyL[0] && buffGyL[1]>buffGyL[2]){
+    if (buffGyL[1]>thresMS){
+      if(gaitState == 2){
+        gaitState = 3;}}}
+
+    // LEFT IC DETECTION (MIN ANGLE)
+  if (buffAngleL[1]<buffAngleL[0] && buffAngleL[1]<buffAngleL[2]){
+    if (buffAngleL[1]<thresIC){
+      if(gaitState == 3){
+        gaitState = 4;}}}
+
+  // RIGHT EC DETECTION (MIN W)
+  if (buffGyR[1]<buffGyR[0] && buffGyR[1]<buffGyR[2]){
+    if (buffGyR[1]<thresEC){
+      if(gaitState == 4){
+        gaitState = 5;}}}
+
+    // RIGHT MS DETECTION (MAX W)
+  if (buffGyR[1]>buffGyR[0] && buffGyR[1]>buffGyR[2]){
+    if (buffGyR[1]>thresMS){
+      if(gaitState == 5){
+        gaitState = 6;}}}
+        
 }

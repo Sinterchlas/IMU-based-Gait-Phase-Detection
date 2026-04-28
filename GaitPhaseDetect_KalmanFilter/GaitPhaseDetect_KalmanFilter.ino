@@ -13,7 +13,7 @@ void setup() {
 
 void loop() {
   unsigned long currentTime = micros();
-  dt = (currentTime - previousTime) / 1000.0;
+  dt = (currentTime - previousTime) / 1000000.0;
   previousTime = currentTime;
 
   readsensors();
@@ -21,18 +21,31 @@ void loop() {
   sensorRate();
   sensorCalc();
   kalmanfilter();
+  //peakdetection();
 
-  //Serial.print(Gy_angle);
-  //Serial.print("\t");          // Pemisah kolom 1 dan 2
-  //Serial.print(Tilt_angle);
-  //Serial.print("\t");          // Pemisah kolom 2 dan 3
-  Serial.print(GyL_rate);
-  Serial.print("\t");          // Pemisah kolom 2 dan 3
-  Serial.print(TiltKalL);
+  /*// bad output
+  Serial.print(GyL_angle); // heavily drifted integrated angval
   Serial.print("\t");  
-  Serial.print(GyR_rate);
-  Serial.print("\t");          // Pemisah kolom 2 dan 3
-  Serial.println(TiltKalR); 
+  Serial.print(Tilt_angleL); // heavily noisy tilt from accelero
+  Serial.print("\t");      
+  Serial.print(GyR_angle); // heavily drifted integrated angval
+  Serial.print("\t");  
+  Serial.println(Tilt_angleR); // heavily noisy tilt from accelero
+  */
+
+  
+  // good output
+  //Serial.print(GyL_rate); // Gyro with bias
+  Serial.print(GyL_stable);
+  Serial.print("\t");        
+  Serial.print(-TiltKalL);
+  Serial.print("\t");  
+  //Serial.print(GyR_rate);// Gyro with bias
+  Serial.print(GyR_stable);
+  Serial.print("\t");         
+  Serial.print(-TiltKalR); 
+  Serial.print("\t");
+  Serial.println(gaitState);
   delay(10);
 }
 

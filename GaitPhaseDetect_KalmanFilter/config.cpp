@@ -14,6 +14,7 @@ float Tilt_angleL = 0.0, Tilt_angleR = 0.0;
 
 float TiltKalL = 0.0, TiltKalR = 0.0;     // Hasil akhir sudut yang difilter
 float BiasL = 0.0, BiasR = 0.0;        // Estimasi bias giroskop
+extern float GyL_stable = 0.0, GyR_stable = 0.0;
 
 // Matriks error covariance (P)
 float P1L = 0.1, P2L = 0.0, P3L = 0.0, P4L = 0.1;
@@ -30,3 +31,21 @@ float QangleR = 0.001;    // Variance process noise dari accelerometer
 float QgyroR = 0.003;     // Variance process noise dari gyroscope
 float RangleR = 10;     // Variance measurement noise
 float ErrEstmtR = 0, K0R = 0, K1R = 0, ErrTiltR = 0;
+
+// PEAK DETECTION
+//  BUFFER FOR GYRO
+float buffGyL[3] = {0}, buffGyR[3] = {0};
+float buffAngleL[3] = {0}, buffAngleR[3] = {0};
+
+// STATE MACHINE
+int gaitState = 1;
+/* Gait state
+  State 1 = right IC
+  state 2 = left EC 
+  state 3 = left MS
+  state 4 = left IC
+  state 5 = right EC
+  state 6 = right MS*/
+
+// STATIC THRESHOLD
+float thresMS = 100 ,thresEC = -80, thresIC = -4; // IC deg < -4, EC w < -80, MS w > 100
