@@ -12,6 +12,7 @@ void setup() {
 }
 
 void loop() {
+
   unsigned long currentTime = micros();
   dt = (currentTime - previousTime) / 1000000.0;
   previousTime = currentTime;
@@ -21,7 +22,8 @@ void loop() {
   sensorRate();
   sensorCalc();
   kalmanfilter();
-  //peakdetection();
+  peakdetection();
+  fsrdetection();
 
   /*// bad output
   Serial.print(GyL_angle); // heavily drifted integrated angval
@@ -45,7 +47,9 @@ void loop() {
   Serial.print("\t");         
   Serial.print(-TiltKalR); 
   Serial.print("\t");
-  Serial.println(gaitState);
+  Serial.print(gaitState);
+  Serial.print("\t");
+  Serial.println(gaitFlag);
   delay(10);
 }
 

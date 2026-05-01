@@ -172,3 +172,42 @@ void peakdetection(){
         gaitState = 6;}}}
         
 }
+
+void fsrdetection(){
+  digitalWrite(controlPin, LOW);  // Seleksi Kanal 0
+  delay(1);                       // Settling time kapasitor internal ADC
+  rawToe = analogRead(PinFSR);
+  
+  // Membaca Heel FSR (Asumsi terhubung pada Channel 1)
+  digitalWrite(controlPin, HIGH); // Seleksi Kanal 1
+  delay(1);                       // Settling time kapasitor internal ADC
+  rawHeel = analogRead(PinFSR);
+
+  // 2. Pemrosesan Sinyal (Digital LPF)
+  // Menghaluskan fluktuasi sinyal pembacaan
+  heel_LPF = (alpha * rawHeel) + ((1.0 - alpha) * heel_LPF);
+  toe_LPF  = (alpha * rawToe) + ((1.0 - alpha) * toe_LPF);
+
+  // 3. Logika Deteksi Fase Gait
+  // Fase Stance
+  if (heel_LPF >= threshold || toe_LPF >= threshold) {
+    if (gaitFlag == 0) {
+      gaitFlag = 1;
+    }
+  }
+  // Fase Swing
+  else if (heel_LPF < threshold && toe_LPF < threshold) {
+    if (gaitFlag == 1) {
+      gaitFlag = 0;
+    }
+  }
+
+  // Deteksi Transisi Heel-Off
+  if (heel_LPF < threshold) {
+    if (heelOff == 0) {
+      heelOff = 1;
+    }
+  } else {
+    heelOff = 0;
+  }
+}

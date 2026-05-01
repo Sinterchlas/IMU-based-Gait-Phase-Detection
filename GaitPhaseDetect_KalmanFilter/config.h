@@ -5,6 +5,7 @@
 // PINOUT
 const int PinLeftGy = PB1, PinLeftAx = PB0, PinLeftAz = PA7; //VCC = PB2, GND = PA6
 const int PinRightGy = PA4, PinRightAx = PA3, PinRightAz = PA2; //VCC = PA5, GND = PA1
+const int PinFSR = PA0, controlPin = PA1; 
 
 
 // MATH CALC
@@ -28,6 +29,13 @@ extern float GyL_rate, AczL_rate, AcxL_rate, GyL_angle;// digunakan untuk integr
 extern float GyR_rate, AczR_rate, AcxR_rate, GyR_angle;// digunakan untuk integrasi sudut
 extern long sumGyL, sumGyR; 
 extern float Tilt_angleL, Tilt_angleR;
+// FSR
+extern float heel_LPF, toe_LPF;
+extern float alpha;
+extern int gaitFlag; // 1 = Stance, 0 = Swing
+extern int heelOff;  // 1 = Fase Heel Off aktif
+const int threshold = 1223;
+extern int rawToe, rawHeel;
 
 
 //  KALMAN FILTER

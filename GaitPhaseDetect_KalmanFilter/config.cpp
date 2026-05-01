@@ -10,7 +10,13 @@ float dt =0.0;
 float Accoffset = 2048, GyLoffset = 0.0, GyRoffset = 0.0;
 float Accsens = 409.6, Gysens = 0.8136;
 float Tilt_angleL = 0.0, Tilt_angleR = 0.0;
+float heel_LPF = 0.0, toe_LPF = 0.0;
 
+//FSR
+float alpha = 0.2;
+int gaitFlag = 0; // 1 = Stance, 0 = Swing
+int heelOff = 0;  // 1 = Fase Heel Off aktif
+extern int rawToe =0 , rawHeel= 0;
 
 float TiltKalL = 0.0, TiltKalR = 0.0;     // Hasil akhir sudut yang difilter
 float BiasL = 0.0, BiasR = 0.0;        // Estimasi bias giroskop
